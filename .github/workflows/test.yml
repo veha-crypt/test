@@ -1,7 +1,13 @@
 name: Test CI
 on:
-  push:
-    branches: [test-ci]
+#  push:
+#    branches: [test-ci]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image version"
+        required: true
+        default: "0.1.0"
 jobs:
   info_job:
     runs-on: ubuntu-latest
@@ -10,11 +16,8 @@ jobs:
         run: |
          echo "Event: ${{ github.event_name }}"
          echo "Repository: ${{ github.repository }}"
-         echo "Brunch: ${{ github.brunch }}"
+         echo "Branch: ${{ github.branch }}"
          echo "Workspace: ${{ github.workspace }}"
-      - name: Checkout repo
-        uses: actions/checkout@v2
-      - run: ls -la
   check_tools:
     runs-on: ubuntu-latest
     steps:
@@ -22,4 +25,10 @@ jobs:
         run: |
          aws --version
          docker --version
-        
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
+      - run: docker images
