@@ -1,7 +1,9 @@
 name: Test CI
-on: [push]
+on:
+  push:
+    branches: [test-ci]
 jobs:
-  info-job:
+  info_job:
     runs-on: ubuntu-latest
     steps:
       - name: Repo information
@@ -13,3 +15,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
       - run: ls -la
+  check_tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check installed tools
+        run: |
+         aws --version
+         docker --version
+        
