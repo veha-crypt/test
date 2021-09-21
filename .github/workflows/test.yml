@@ -1,15 +1,29 @@
 name: Test CI
-on: [push]
+on:
+  push:
+    branches: [test-ci]
+  workflow_dispatch:
+
 jobs:
-  info-job:
+  info_job:
     runs-on: ubuntu-latest
     steps:
       - name: Repo information
         run: |
          echo "Event: ${{ github.event_name }}"
          echo "Repository: ${{ github.repository }}"
-         echo "Brunch: ${{ github.brunch }}"
+         echo "Branch: ${{ github.branch }}"
          echo "Workspace: ${{ github.workspace }}"
-      - name: Checkout repo
-        uses: actions/checkout@v2
-      - run: ls -la
+  check_tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check installed tools
+        run: |
+         aws --version
+         docker --version
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: docker build -t test-image -f Dockerfile .
