@@ -1,15 +1,15 @@
-me: Test CI
+name: Test CI
 on: [push]
 jobs:
-  info_job:
+  info-job:
     runs-on: ubuntu-latest
     steps:
       - name: Repo information
-      - run: echo "Event: ${{ github.event_name }}"
-      - run: echo "Repository: ${{ github.repository }}"
-      - run: echo "Brunch: ${{ github.brunch }}"
-      - run: echo "Workspace: ${{ github.workspace }}"
+        run: |
+         echo "Event: ${{ github.event_name }}"
+         echo "Repository: ${{ github.repository }}"
+         echo "Brunch: ${{ github.brunch }}"
+         echo "Workspace: ${{ github.workspace }}"
       - name: Checkout repo
         uses: actions/checkout@v2
-      - run: ls -l 
-
+      - run: ls -la
