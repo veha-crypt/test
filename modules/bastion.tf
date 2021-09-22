@@ -21,7 +21,7 @@ data "aws_ami" "ubuntu" {
 ################################################################################
 # Security Group
 ################################################################################
-
+#tfsec:ignore:aws-vpc-no-public-egress-sg
 resource "aws_security_group" "bastion_sg" {
 
   vpc_id                    = var.vpc_id
