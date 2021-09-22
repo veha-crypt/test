@@ -25,6 +25,7 @@ jobs:
         with:
           name: info_artifact
           path: ${{ github.workspace }}/info_file
+
   check_tools:
     needs: info_job
     runs-on: ubuntu-latest
@@ -40,6 +41,7 @@ jobs:
       - run: |
           ls -l ${{ github.workspace }}
           cat ${{ github.workspace }}/info_file
+
   build:
     runs-on: ubuntu-latest
     needs: info_job
@@ -55,8 +57,7 @@ jobs:
          else
            version=${{ github.event.inputs.version }}
          fi
-         docker build -t test-image:"$VERSION_NUMBER" -f Dockerfile .
-         #docker build -t test-image:$version -f Dockerfile .
+         docker build -t test-image:$version -f Dockerfile .
          #docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
       - name: Image list
         run: docker images
@@ -76,22 +77,3 @@ jobs:
         output-file: README.md
         output-method: inject
         git-push: "true"
-
-  tfsec:
-    name: Run tfsec sarif report
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v2
-      - name: Run tfsec
-        uses: tfsec/tfsec-sarif-action@9a83b5c3524f825c020e356335855741fd02745f
-        with:
-          sarif_file: tfsec.sarif
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v1
-        with:
-          sarif_file: tfsec.sarif
