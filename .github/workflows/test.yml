@@ -1,13 +1,13 @@
 name: Test CI
 on:
-#  push:
-#    branches: [test-ci]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Image version"
-        required: true
-        default: "0.1.0"
+  push:
+    branches: [test-ci]
+#  workflow_dispatch:
+#    inputs:
+#      version:
+#        description: "Image version"
+#        required: true
+#        default: "0.1.0"
 jobs:
   info_job:
     runs-on: ubuntu-latest
@@ -25,10 +25,24 @@ jobs:
         run: |
          aws --version
          docker --version
-  build:
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Build image
+#        run: docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
+#      - run: docker images
+
+  terraform_docs:
     runs-on: ubuntu-latest
+    name: Generate Terraform Docs
     steps:
-      - uses: actions/checkout@v2
-      - name: Build image
-        run: docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
-      - run: docker images
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Render Terraform Docs
+      uses: terraform-docs/gh-actions@v0.6.0
+      with:
+        working-dir: modules
+        output-file: README.md
+        output-method: inject
+        git-push: "true"
