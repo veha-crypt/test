@@ -1,0 +1,171 @@
+# -------------------- Nginx ConfigMap --------------------- #
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-conf
+  namespace: homam
+data:
+  nginx.conf: |
+    user  homam;
+    worker_processes  auto;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /tmp/nginx.pid;
+    events {
+        worker_connections  1024;
+        use epoll;
+    }
+    http {
+        include       /etc/nginx/mime.types;
+        default_type  application/octet-stream;
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+        access_log  off;
+        sendfile        on;
+        keepalive_timeout  65;
+        tcp_nopush on;
+        gzip  on;
+        include /etc/nginx/conf.d/*.conf;
+    }
+---
+# -------------------- Reverseproxy ConfigMap --------------------- #
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reverse-conf
+  namespace: homam
+data:
+  reverse.conf: |
+    server  {
+      listen 9443 ssl default;
+      server_name api-test.homamcloud.com;
+      server_tokens off;
+      client_max_body_size 200m;
+      keepalive_timeout   60;
+      ssl_certificate      /certs/crt.pem;
+      ssl_certificate_key  /certs/key.pem;
+      ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+      add_header Strict-Transport-Security 'max-age=604800';
+      add_header 'Access-Control-Allow-Origin' 'https://confluence-open-api.herokuapp.com';
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Headers' 'Authorization,Accept,Origin,DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range';
+      add_header 'Access-Control-Allow-Methods' 'GET,POST,OPTIONS,PUT,DELETE,PATCH';
+      access_log off;
+      error_log /var/log/nginx/nginx.error.log warn;
+      location / {
+        proxy_pass http://web-service:5000;
+        proxy_redirect off;
+        proxy_max_temp_file_size 0;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Port 9443;
+        proxy_set_header X-Forwarded-Proto $scheme;
+      }
+      location ~* ^.+\.(jpg|jpeg|png|gif|svg|bmp|swf|swu)$ {
+        root /opt/uploads;
+      }
+      location /nginx_status {
+        stub_status;
+        access_log off;
+        allow all;
+        deny all;
+      }
+    }
+---
+# ------------------- Nginx Deployment ------------------- #
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: homam
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: zorsoft/nginx:4.0
+        imagePullPolicy: Always
+        securityContext:
+          runAsUser: 1111
+          runAsGroup: 998
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
+            memory: "250Mi"
+            cpu: "150m"
+        ports:
+        - containerPort: 9443
+        volumeMounts:
+        - name: uploads
+          mountPath: "/opt/uploads"
+        - name: nginx-conf
+          mountPath: "/etc/nginx/nginx.conf"
+          subPath: "nginx.conf"
+        - name: reverse-conf
+          mountPath: "/etc/nginx/conf.d/reverse.conf"
+          subPath: "reverse.conf"
+        - name: nginx-cert
+          mountPath: "/certs"
+          readOnly: true
+      volumes:
+      - name: nginx-conf
+        configMap:
+          name: nginx-conf
+      - name: reverse-conf
+        configMap:
+          name: reverse-conf
+      - name: uploads
+        hostPath:
+          path: /data/uploads
+      - name: nginx-cert
+        secret:
+          secretName: homam-certs
+---
+# --------------------- Nginx Service --------------------- #
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: homam
+  labels:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+    - port: 9443
+      name: https
+---
+#------------------ Nginx HPA ------------------#
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  namespace: homam
+  name: nginx
+spec:
+  maxReplicas: 3
+  minReplicas: 1
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
