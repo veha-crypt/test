@@ -26,6 +26,7 @@ resource "aws_security_group" "bastion_sg" {
 
   vpc_id                    = var.vpc_id
   name                      = "bastion"
+  description               = "Security group that allows SSH-access to bastion"
   egress {
     from_port               = 0
     to_port                 = 0
@@ -106,4 +107,3 @@ resource "aws_autoscaling_group" "bastion" {
   )
 
 }
-
