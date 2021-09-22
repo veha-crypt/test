@@ -1,34 +1,79 @@
 name: Test CI
 on:
-#  push:
-#    branches: [test-ci]
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Image version"
-        required: true
-        default: "0.1.0"
+  push:
+    branches: [test-ci]
+#    paths:
+#      - 'modules/**'
+
+#  workflow_dispatch:
+#    inputs:
+#      version:
+#        description: "Image version"
+#        required: true
+#        default: "0.1.0"
 jobs:
   info_job:
     runs-on: ubuntu-latest
     steps:
       - name: Repo information
         run: |
-         echo "Event: ${{ github.event_name }}"
-         echo "Repository: ${{ github.repository }}"
-         echo "Branch: ${{ github.branch }}"
-         echo "Workspace: ${{ github.workspace }}"
+         echo "Event: ${{ github.event_name }}" > info_file
+         echo "Repository: ${{ github.repository }}" >> info_file
+         echo "Branch: ${{ github.ref }}" >> info_file
+         echo "Workspace: ${{ github.workspace }}" info_file
+      - uses: actions/upload-artifact@v2
+        with:
+          name: info_artifact
+          path: ${{ github.workspace }}/info_file
+
   check_tools:
+    needs: info_job
     runs-on: ubuntu-latest
     steps:
       - name: Check installed tools
         run: |
          aws --version
          docker --version
+      - name: Read repo info
+        uses: actions/download-artifact@v2
+        with:
+          name: info_artifact
+      - run: |
+          ls -l ${{ github.workspace }}
+          cat ${{ github.workspace }}/info_file
+
   build:
     runs-on: ubuntu-latest
+    needs: info_job
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
-      - run: docker images
+        env:
+#          VERSION_NUMBER: ${{ secrets.VERSION_NUMBER }}
+          VERSION_NUMBER: 0.0.1
+        run: |
+         if [ -z ${{ github.event.inputs.version }} ]; then
+           version=$VERSION_NUMBER
+         else
+           version=${{ github.event.inputs.version }}
+         fi
+         docker build -t test-image:$version -f Dockerfile .
+         #docker build -t test-image:${{ github.event.inputs.version }} -f Dockerfile .
+      - name: Image list
+        run: docker images
+
+  terraform_docs:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [check_tools, build]
+    name: Generate Terraform Docs
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Render Terraform Docs
+      uses: terraform-docs/gh-actions@v0.6.0
+      with:
+        working-dir: modules
+        output-file: README.md
+        output-method: inject
+        git-push: "true"
