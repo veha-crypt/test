@@ -1,15 +1,19 @@
 # Usage
 
 <!--- BEGIN_TF_DOCS --->
+This module allows to create a bastion instance via autoscaling group
+
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| aws | ~> 3.46.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | n/a |
+| aws | ~> 3.46.0 |
 
 ## Modules
 
