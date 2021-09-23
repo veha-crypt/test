@@ -1,7 +1,8 @@
 # Usage
 
 <!--- BEGIN_TF_DOCS --->
-This module allows to create a bastion instance via autoscaling group
+VPC EKS Network - Terraform Module  
+This module allows to create network components for EKS
 
 ## Requirements
 
@@ -23,26 +24,38 @@ No Modules.
 
 | Name |
 |------|
-| [aws_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) |
-| [aws_autoscaling_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/autoscaling_group) |
-| [aws_launch_template](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/launch_template) |
-| [aws_security_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) |
+| [aws_eip](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip) |
+| [aws_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway) |
+| [aws_nat_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/nat_gateway) |
+| [aws_route](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) |
+| [aws_route_table](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) |
+| [aws_route_table_association](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) |
+| [aws_subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) |
+| [aws_vpc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| cidr\_block | CIDR block for the VPC | `string` | n/a | yes |
+| db\_subnets | A map of the subnets cidr blocks and avz for database | `map(map(any))` | `{}` | no |
+| enable\_dns\_hostnames | A boolean flag to enable/disable DNS hostname in the VPC | `string` | n/a | yes |
+| enable\_dns\_support | A boolean flag to enable/disable DNS support in the VPC | `string` | n/a | yes |
 | environment | A name of environment | `string` | n/a | yes |
-| ingress | A list of ingress blocks | `list(map(string))` | <pre>[<br>  {<br>    "cidr_blocks": "0.0.0.0/0",<br>    "from_port": "22",<br>    "protocol": "tcp",<br>    "to_port": "22"<br>  }<br>]</pre> | no |
-| instance\_type | The size of instance to launch | `string` | `"t2.small"` | no |
-| key\_name | The key name that should be used for the instance | `string` | n/a | yes |
-| public\_subnets | A list of the subnet ids | `list` | n/a | yes |
+| instance\_tenancy | A tenancy option for instances launched into the VPC | `string` | n/a | yes |
+| name | A name of application | `string` | n/a | yes |
+| public\_subnets | A map of the subnets cidr blocks and avz for public access | `map(map(any))` | `{}` | no |
 | region | AWS region name for the VPC | `string` | n/a | yes |
-| vpc\_id | ID of the VPC where to create security group | `string` | n/a | yes |
+| worker\_subnets | A map of the subnets cidr blocks and avz for worker nodes | `map(map(any))` | `{}` | no |
 
 ## Outputs
 
-No output.
+| Name | Description |
+|------|-------------|
+| aws\_vpc\_id | The ID of the VPC |
+| db\_subnet\_ids | List of IDs of database subnets |
+| public\_subnet\_ids | List of IDs of public subnets |
+| worker\_subnet\_ids | List of IDs of worker subnets |
 
 <!--- END_TF_DOCS --->
 
