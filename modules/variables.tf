@@ -1,7 +1,44 @@
+variable "cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "instance_tenancy" {
+  description = "A tenancy option for instances launched into the VPC"
+  type        = string
+}
+
+variable "enable_dns_support" {
+  description = "A boolean flag to enable/disable DNS support in the VPC"
+  type        = string
+}
+
+variable "enable_dns_hostnames" {
+  description = "A boolean flag to enable/disable DNS hostname in the VPC"
+  type        = string
+}
+
+variable "name" {
+  description = "A name of application"
+  type        = string
+}
 
 variable "public_subnets" {
-  description = "A list of the subnet ids"
-  type        = list
+  description = "A map of the subnets cidr blocks and avz for public access"
+  type        = map(map(any))
+  default     = {}
+}
+
+variable "worker_subnets" {
+  description = "A map of the subnets cidr blocks and avz for worker nodes"
+  type        = map(map(any))
+  default     = {}
+}
+
+variable "db_subnets" {
+  description = "A map of the subnets cidr blocks and avz for database"
+  type        = map(map(any))
+  default     = {}
 }
 
 variable "environment" {
@@ -11,33 +48,5 @@ variable "environment" {
 
 variable "region" {
   description = "AWS region name for the VPC"
-  type        = string
-}
-
-variable "instance_type" {
-  description = "The size of instance to launch"
-  type        = string
-  default     = "t2.small"
-}
-
-variable "key_name" {
-  description = "The key name that should be used for the instance"
-  type        = string
-}
-variable "ingress" {
-  description = "A list of ingress blocks"
-  type        = list(map(string))
-  default = [
-    {
-      from_port   = "22"
-      to_port     = "22"
-      protocol    = "tcp"
-      cidr_blocks = "0.0.0.0/0"
-    }
-  ]
-}
-
-variable "vpc_id" {
-  description = "ID of the VPC where to create security group"
   type        = string
 }
