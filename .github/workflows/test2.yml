@@ -1,0 +1,40 @@
+name: Test CI
+on:
+  push:
+    branches: [test-ci]
+#    paths:
+#      - 'modules/**'
+
+#  workflow_dispatch:
+#    inputs:
+#      version:
+#        description: "Image version"
+#        required: true
+#        default: "0.1.0"
+jobs:
+  info_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo information
+        run: |
+         echo "Event: ${{ github.event_name }}" > info_file
+         echo "Repository: ${{ github.repository }}" >> info_file
+         echo "Branch: ${{ github.ref }}" >> info_file
+         echo "Workspace: ${{ github.workspace }}" info_file
+      - uses: actions/upload-artifact@v2
+        with:
+          name: info_artifact
+          path: ${{ github.workspace }}/info_file
+
+  check_tools:
+    needs: info_job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check installed tools
+        run: |
+         aws --version
+         docker --version
+         terraform --version
+         gh secret list
+
+

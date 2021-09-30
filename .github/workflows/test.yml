@@ -34,6 +34,8 @@ jobs:
         run: |
          aws --version
          docker --version
+         terraform --version
+         gh secret list
       - name: Read repo info
         uses: actions/download-artifact@v2
         with:
