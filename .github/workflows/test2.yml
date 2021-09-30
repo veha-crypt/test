@@ -1,40 +1,29 @@
-name: Test CI
+name: Test Secrets
 on:
   push:
     branches: [test-ci]
-#    paths:
-#      - 'modules/**'
 
-#  workflow_dispatch:
-#    inputs:
-#      version:
-#        description: "Image version"
-#        required: true
-#        default: "0.1.0"
 jobs:
-  info_job:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repo information
-        run: |
-         echo "Event: ${{ github.event_name }}" > info_file
-         echo "Repository: ${{ github.repository }}" >> info_file
-         echo "Branch: ${{ github.ref }}" >> info_file
-         echo "Workspace: ${{ github.workspace }}" info_file
-      - uses: actions/upload-artifact@v2
-        with:
-          name: info_artifact
-          path: ${{ github.workspace }}/info_file
-
   check_tools:
-    needs: info_job
     runs-on: ubuntu-latest
     steps:
-      - name: Check installed tools
-        run: |
-         aws --version
-         docker --version
-         terraform --version
-         gh secret list
+#      - name: Checkout Code
+#        uses: actions/checkout@v2
+#      - name: Check gh cli
+#        env:
+#          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#        run: |
+#         echo "GH VERSION"
+#         gh --version
+#         echo "SECRET LIST"
+#         gh secret list
 
+      - name: Check aws cli
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_DEFAULT_REGION}}
+        run: |
+         echo "AZ"
+         aws ec2 describe-availability-zones
 
